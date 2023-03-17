@@ -19,9 +19,19 @@ export class Base32Encoding {
     );
   }
 
+  /**
+   * Returns the length in bytes of the base32 encoding data.
+   *
+   * @param len The length in bytes of the input data.
+   * @param padChar The padding character of encoding, and empty string for no padding.
+   * @returns The length in bytes of the base32 encoded data.
+   */
   // eslint-disable-next-line class-methods-use-this
   encodeLength(len: number, padChar: string): number {
-    return padChar === '' ? (len * 8 + 4) / 5 : ((len + 4) / 5) * 8;
+    if (padChar === '') {
+      return Math.floor((len * 8 + 4) / 5);
+    }
+    return Math.floor(((len + 4) / 5) * 8);
   }
 
   // eslint-disable-next-line class-methods-use-this
