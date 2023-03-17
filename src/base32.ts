@@ -1,21 +1,63 @@
-const base32StdEncoder = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+import { checkEncoder, checkPadChar } from './utils';
+
+/**
+ * The standard Base32 encoding alphabets.
+ */
+export const Base32StdEncoder = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+/**
+ * The "Extended Hex" Base32 encoding alphabets.
+ */
+export const Base32HexEncoder = '0123456789ABCDEFGHIJKLMNOPQRSTUV';
 
 interface Base32Options {
-  padChar?: string;
-
+  /**
+   * Encoding alphabets, and it must be 32-byte string. Default `Base32StdEncoder`.
+   */
   encoder?: string;
+
+  /**
+   * Padding character for padding when the encoded string in bytes is not a number to a multiple
+   * of 8, or set it to empty string to disable padding. The padding character must not be newline
+   * character ('\r' and '\n'), and cannot be contained in the encoding alphabets. Default '='.
+   */
+  padChar?: string;
 }
 
 export class Base32Encoding {
-  private padChar: string;
-
+  /**
+   * The default encoder alphabets.
+   */
   private encoder: string;
 
+  /**
+   * The default padding character.
+   */
+  private padChar: string;
+
+  /**
+   * Creates a Base32 encoding instance with the optional encoder alphabets and padding character
+   * settings.
+   *
+   * ```js
+   * const base32 = new Base32Encoding({
+   *   encoder: Base32HexEncoder,
+   * });
+   * ```
+   *
+   * @param options Optional settings for Base32 encoding.
+   */
   constructor(options?: Base32Options) {
-    this.padChar = (options?.padChar && this.checkPadChar(options.padChar)) || '=';
-    this.encoder = this.checkEncoder(
-      options?.encoder ? options.encoder : base32StdEncoder,
+    let padChar: string | undefined;
+    if (options?.padChar !== undefined) {
+      padChar = checkPadChar(options.padChar);
+    }
+    this.padChar = padChar !== undefined ? padChar : '=';
+
+    this.encoder = checkEncoder(
+      options?.encoder ? options.encoder : Base32StdEncoder,
       this.padChar,
+      32,
     );
   }
 
@@ -33,36 +75,10 @@ export class Base32Encoding {
     }
     return Math.floor(((len + 4) / 5) * 8);
   }
-
-  // eslint-disable-next-line class-methods-use-this
-  private checkEncoder(encoder: string, padChar: string): string {
-    if (encoder?.length !== 32 || new TextEncoder().encode(encoder).length) {
-      throw new Error('encoding alphabet is not 32-bytes.');
-    }
-
-    if (encoder.indexOf(padChar) >= 0) {
-      throw new Error('padding character contained in alphabet');
-    }
-
-    return encoder;
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  private checkPadChar(padChar: string): string | undefined {
-    const padding = padChar[0];
-    if (padding?.length <= 0) {
-      return undefined;
-    }
-
-    if (padding === '\r'
-      || padding === '\n'
-      || padChar.charCodeAt(0) > 0xff
-    ) {
-      throw new Error('invalid padding character');
-    }
-
-    return padding;
-  }
 }
 
+/**
+ * The builtin Base32 encoding instance with the standard encoder alphabets and the padding
+ * character `'='`.
+ */
 export const base32 = new Base32Encoding();
