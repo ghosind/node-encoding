@@ -41,10 +41,11 @@ export const checkPadChar = (padChar: string): string | undefined => {
     return undefined;
   }
 
-  const padding = padChar[0];
-  if (padding.length <= 0) {
+  if (padChar.length <= 0) {
     return ''; // empty string for disable padding.
   }
+
+  const padding = padChar[0];
 
   if (padding === '\r'
     || padding === '\n'
