@@ -73,7 +73,7 @@ export class Base32Encoding {
     if (padChar === '') {
       return Math.floor((len * 8 + 4) / 5);
     }
-    return Math.floor(((len + 4) / 5) * 8);
+    return Math.floor(Math.floor((len + 4) / 5) * 8);
   }
 }
 
