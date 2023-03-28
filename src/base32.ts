@@ -121,6 +121,22 @@ export class Base32Encoding {
   }
 
   /**
+   * Decoding a encoded string to the original data.
+   *
+   * ```js
+   * base32.decode('MZXW6===');
+   * // foo
+   * ```
+   *
+   * @param data String to encoding.
+   * @param options Optional settings about encoder string and padding character.
+   * @returns The encoded string of data.
+   */
+  decode(str: string, options?: Base32Options): string {
+    throw new Error('Not Implemented');
+  }
+
+  /**
    * Returns the length in bytes of the base32 encoding data.
    *
    * @param len The length in bytes of the input data.
