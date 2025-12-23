@@ -84,37 +84,31 @@ export class Base32Encoding {
     const destLen = this.encodeLength(data.length, padChar);
     const dest = Buffer.alloc(destLen, padChar);
 
-    let si = -1; // source index
-    let di = 0; // destination index
-    let tmp = 0;
-    let remainBits = 0;
-    let c = 0;
+    let bits = 0;
+    let value = 0;
+    let offset = 0;
 
-    while (si < data.length) {
-      const bits = remainBits <= 5 ? 5 - remainBits : 0;
-      if (remainBits < 5) {
-        si += 1;
-        if (si === data.length) {
-          if (remainBits === 0) {
-            break;
-          }
-          c = 0;
-        } else {
-          c = data.charCodeAt(si);
-        }
+    for (let i = 0; i < data.length; i++) {
+      value = (value << 8) | data.charCodeAt(i);
+      bits += 8;
 
-        remainBits = 0;
+      while (bits >= 5) {
+        dest.writeUInt8(encoder[(value >>> (bits - 5)) & 31].charCodeAt(0), offset);
+        offset++;
+        bits -= 5;
       }
+    }
 
-      if (bits > 0) {
-        tmp |= (c >> (8 - bits)) & 0x1f;
+    if (bits > 0) {
+      dest.writeUInt8(encoder[(value << (5 - bits)) & 31].charCodeAt(0), offset);
+      offset++;
+    }
+
+    if (padChar !== '') {
+      while (offset < destLen) {
+        dest.writeUInt8(padChar.charCodeAt(0), offset);
+        offset++;
       }
-
-      dest.write(encoder.charAt(tmp), di);
-      di += 1;
-
-      remainBits = remainBits < 5 ? 8 - bits - remainBits : remainBits - 5;
-      tmp = (remainBits <= 5 ? (c << (5 - remainBits)) : (c >> (remainBits - 5))) & 0x1f;
     }
 
     return dest.toString();
@@ -133,7 +127,38 @@ export class Base32Encoding {
    * @returns The encoded string of data.
    */
   decode(str: string, options?: Base32Options): string {
-    throw new Error('Not Implemented');
+    if (!str || str.length === 0) {
+      return '';
+    }
+
+    const { encoder, padChar } = this.getEncoderAndPadChar(options);
+    const cleanedLength = str.endsWith(padChar) && padChar !== ''
+      ? str.indexOf(padChar)
+      : str.length;
+    const destLen = Math.floor((cleanedLength * 5) / 8);
+    const dest = Buffer.alloc(destLen);
+
+    let bits = 0;
+    let value = 0;
+    let offset = 0;
+
+    for (let i = 0; i < cleanedLength; i++) {
+      const idx = encoder.indexOf(str.charAt(i));
+      if (idx === -1) {
+        throw new Error(`Invalid character found: ${str.charAt(i)}`);
+      }
+
+      value = (value << 5) | idx;
+      bits += 5;
+
+      if (bits >= 8) {
+        dest.writeUInt8((value >>> (bits - 8)) & 0xff, offset);
+        offset++;
+        bits -= 8;
+      }
+    }
+
+    return dest.toString();
   }
 
   /**

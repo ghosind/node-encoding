@@ -173,4 +173,12 @@ describe('Test base32 decode', () => {
     assert.equal(decoder.decode('CPNMUOJ1', options), 'fooba');
     assert.equal(decoder.decode('CPNMUOJ1E8', options), 'foobar');
   });
+
+  it('Test base32 decode with invalid input', () => {
+    const decoder = new Base32Encoding();
+
+    assert.throws(() => {
+      decoder.decode('MZXW6YTB$');
+    }, /Invalid character found: \$/);
+  });
 });
