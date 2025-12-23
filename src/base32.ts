@@ -81,7 +81,7 @@ export class Base32Encoding {
     }
 
     const { encoder, padChar } = this.getEncoderAndPadChar(options);
-    const destLen = this.encodeLength(data.length, padChar);
+    const destLen = this.getEncodeLength(data.length, padChar);
     const dest = Buffer.alloc(destLen, padChar);
 
     let bits = 0;
@@ -132,10 +132,7 @@ export class Base32Encoding {
     }
 
     const { encoder, padChar } = this.getEncoderAndPadChar(options);
-    const cleanedLength = str.endsWith(padChar) && padChar !== ''
-      ? str.indexOf(padChar)
-      : str.length;
-    const destLen = Math.floor((cleanedLength * 5) / 8);
+    const [cleanedLength, destLen] = this.getDecodeLength(str, padChar);
     const dest = Buffer.alloc(destLen);
 
     let bits = 0;
@@ -168,12 +165,27 @@ export class Base32Encoding {
    * @param padChar The padding character of encoding, and empty string for no padding.
    * @returns The length in bytes of the base32 encoded data.
    */
-  // eslint-disable-next-line class-methods-use-this
-  encodeLength(len: number, padChar: string): number {
+  private getEncodeLength(len: number, padChar: string): number {
     if (padChar === '') {
       return Math.floor((len * 8 + 4) / 5);
     }
     return Math.floor(Math.floor((len + 4) / 5) * 8);
+  }
+
+  /**
+   * Returns the length in bytes of cleaned string and decoded data.
+   *
+   * @param str The string that to decode.
+   * @param padChar The padding character of decoding, and empty string for no padding.
+   * @returns The length in bytes of cleaned string and decoded data.
+   */
+  private getDecodeLength(str: string, padChar: string): [number, number] {
+    const cleanedLength = str.endsWith(padChar) && padChar !== ''
+      ? str.indexOf(padChar)
+      : str.length;
+    const destLen = Math.floor((cleanedLength * 5) / 8);
+
+    return [cleanedLength, destLen];
   }
 
   /**
