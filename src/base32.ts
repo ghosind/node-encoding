@@ -11,7 +11,15 @@ export const Base32StdEncoder = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
  */
 export const Base32HexEncoder = '0123456789ABCDEFGHIJKLMNOPQRSTUV';
 
-interface Base32Options {
+const BITS_PER_BYTE = 8;
+const BITS_PER_CHAR = 5;
+const BLOCK_BYTES = 5; // 5 bytes -> 8 Base32 chars
+const BLOCK_CHARS = 8; // 8 Base32 chars per 5 bytes
+const CHAR_MASK = (1 << BITS_PER_CHAR) - 1; // 0b11111 (31)
+const BYTE_MASK = 0xff;
+const ENCODER_LENGTH = 32;
+
+export interface Base32Options {
   /**
    * Encoding alphabets, and it must be 32-byte string. Default `Base32StdEncoder`.
    */
@@ -58,7 +66,7 @@ export class Base32Encoding {
     this.encoder = checkEncoder(
       options?.encoder ? options.encoder : Base32StdEncoder,
       this.padChar,
-      32,
+      ENCODER_LENGTH,
     );
   }
 
@@ -92,15 +100,15 @@ export class Base32Encoding {
       value = (value << 8) | data.charCodeAt(i);
       bits += 8;
 
-      while (bits >= 5) {
-        dest[offset] = encoder[(value >>> (bits - 5)) & 31].charCodeAt(0);
+      while (bits >= BITS_PER_CHAR) {
+        dest[offset] = encoder[(value >>> (bits - BITS_PER_CHAR)) & CHAR_MASK].charCodeAt(0);
         offset++;
-        bits -= 5;
+        bits -= BITS_PER_CHAR;
       }
     }
 
     if (bits > 0) {
-      dest[offset] = encoder[(value << (5 - bits)) & 31].charCodeAt(0);
+      dest[offset] = encoder[(value << (BITS_PER_CHAR - bits)) & CHAR_MASK].charCodeAt(0);
       offset++;
     }
 
@@ -145,13 +153,13 @@ export class Base32Encoding {
         throw new Error(`Invalid character found: ${str.charAt(i)}`);
       }
 
-      value = (value << 5) | idx;
-      bits += 5;
+      value = (value << BITS_PER_CHAR) | idx;
+      bits += BITS_PER_CHAR;
 
-      if (bits >= 8) {
-        dest[offset] = (value >>> (bits - 8)) & 0xff;
+      if (bits >= BITS_PER_BYTE) {
+        dest[offset] = (value >>> (bits - BITS_PER_BYTE)) & BYTE_MASK;
         offset++;
-        bits -= 8;
+        bits -= BITS_PER_BYTE;
       }
     }
 
@@ -167,9 +175,9 @@ export class Base32Encoding {
    */
   private getEncodeLength(len: number, padChar: string): number {
     if (padChar === '') {
-      return Math.floor((len * 8 + 4) / 5);
+      return Math.floor((len * BITS_PER_BYTE + (BITS_PER_CHAR - 1)) / BITS_PER_CHAR);
     }
-    return Math.floor(Math.floor((len + 4) / 5) * 8);
+    return Math.floor(Math.floor((len + (BLOCK_BYTES - 1)) / BLOCK_BYTES) * BLOCK_CHARS);
   }
 
   /**
@@ -183,7 +191,7 @@ export class Base32Encoding {
     const cleanedLength = str.endsWith(padChar) && padChar !== ''
       ? str.indexOf(padChar)
       : str.length;
-    const destLen = Math.floor((cleanedLength * 5) / 8);
+    const destLen = Math.floor((cleanedLength * BITS_PER_CHAR) / BITS_PER_BYTE);
 
     return [cleanedLength, destLen];
   }
