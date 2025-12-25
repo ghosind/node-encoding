@@ -1,5 +1,5 @@
 /* eslint-disable no-bitwise */
-import { checkEncoder, checkPadChar } from './utils';
+import { checkEncoder, checkPadChar, decodeBytes } from './utils';
 
 /**
  * The standard Base32 encoding alphabets.
@@ -82,7 +82,7 @@ export class Base32Encoding {
 
     const { encoder, padChar } = this.getEncoderAndPadChar(options);
     const destLen = this.getEncodeLength(data.length, padChar);
-    const dest = Buffer.alloc(destLen, padChar);
+    const dest = new Uint8Array(destLen);
 
     let bits = 0;
     let value = 0;
@@ -93,25 +93,25 @@ export class Base32Encoding {
       bits += 8;
 
       while (bits >= 5) {
-        dest.writeUInt8(encoder[(value >>> (bits - 5)) & 31].charCodeAt(0), offset);
+        dest[offset] = encoder[(value >>> (bits - 5)) & 31].charCodeAt(0);
         offset++;
         bits -= 5;
       }
     }
 
     if (bits > 0) {
-      dest.writeUInt8(encoder[(value << (5 - bits)) & 31].charCodeAt(0), offset);
+      dest[offset] = encoder[(value << (5 - bits)) & 31].charCodeAt(0);
       offset++;
     }
 
     if (padChar !== '') {
       while (offset < destLen) {
-        dest.writeUInt8(padChar.charCodeAt(0), offset);
+        dest[offset] = padChar.charCodeAt(0);
         offset++;
       }
     }
 
-    return dest.toString();
+    return decodeBytes(dest);
   }
 
   /**
@@ -133,7 +133,7 @@ export class Base32Encoding {
 
     const { encoder, padChar } = this.getEncoderAndPadChar(options);
     const [cleanedLength, destLen] = this.getDecodeLength(str, padChar);
-    const dest = Buffer.alloc(destLen);
+    const dest = new Uint8Array(destLen);
 
     let bits = 0;
     let value = 0;
@@ -149,13 +149,13 @@ export class Base32Encoding {
       bits += 5;
 
       if (bits >= 8) {
-        dest.writeUInt8((value >>> (bits - 8)) & 0xff, offset);
+        dest[offset] = (value >>> (bits - 8)) & 0xff;
         offset++;
         bits -= 8;
       }
     }
 
-    return dest.toString();
+    return decodeBytes(dest);
   }
 
   /**

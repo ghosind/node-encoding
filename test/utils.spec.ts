@@ -2,7 +2,7 @@ import assert from 'assert';
 import { describe, it } from 'mocha';
 
 import { Base32StdEncoder } from '../src/base32';
-import { checkEncoder, checkPadChar } from '../src/utils';
+import { checkEncoder, checkPadChar, decodeBytes } from '../src/utils';
 
 describe('Test check encoder', () => {
   it('Test check encoder', () => {
@@ -62,5 +62,47 @@ describe('Test check pad char', () => {
       const padChar = checkPadChar({});
       assert.equal(padChar, undefined);
     });
+  });
+});
+
+describe('Test decode bytes', () => {
+  const data = new Uint8Array([72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33]); // "Hello, World!"
+  const expected = "Hello, World!";
+
+  it('Test decode bytes with default TextDecoder', () => {
+    const str = decodeBytes(data);
+    assert.equal(str, expected);
+  });
+
+  it('Test decode bytes with Node.js Buffer', () => {
+    const original = global.TextDecoder;
+
+    try {
+      // @ts-ignore
+      global.TextDecoder = undefined;
+
+      const str = decodeBytes(data);
+      assert.equal(str, expected);
+    } finally {
+      global.TextDecoder = original;
+    }
+  });
+
+  it('Test decode bytes with convert fromCharCode', () => {
+    const originalTextDecoder = global.TextDecoder;
+    const originalBuffer = global.Buffer;
+
+    try {
+      // @ts-ignore
+      global.TextDecoder = undefined;
+      // @ts-ignore
+      global.Buffer = undefined;
+
+      const str = decodeBytes(data);
+      assert.equal(str, expected);
+    } finally {
+      global.TextDecoder = originalTextDecoder;
+      global.Buffer = originalBuffer;
+    }
   });
 });

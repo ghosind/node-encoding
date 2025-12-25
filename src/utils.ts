@@ -56,3 +56,21 @@ export const checkPadChar = (padChar: string): string | undefined => {
 
   return padding;
 };
+
+/**
+ * Decode the Uint8Array bytes to string.
+ *
+ * @param bytes The bytes to decode.
+ * @returns The decoded string.
+ */
+export const decodeBytes = (bytes: Uint8Array): string => {
+  if (typeof TextDecoder !== 'undefined') {
+    return new TextDecoder().decode(bytes);
+  }
+
+  if (typeof globalThis.Buffer !== 'undefined') {
+    return globalThis.Buffer.from(bytes).toString();
+  }
+
+  return Array.from(bytes).map((b) => String.fromCharCode(b)).join('');
+}
