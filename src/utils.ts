@@ -4,14 +4,14 @@
  * `'\n'`) or the padding character.
  *
  * @param encoder The encoding alphabets for BaseXX encoding.
- * @param padChar The padding character.
  * @param base The base number.
+ * @param padChar The padding character.
  * @returns The valid encoder alphabets.
  * @throws The length in bytes of encoder alphabets is not equals to the base number.
  * @throws The encoder alphabets contains the padding character.
  * @throws The encoder alphabets contains the newline character ('\r' or '\n').
  */
-export const checkEncoder = (encoder: string, padChar: string, base: number): string => {
+export const checkEncoder = (encoder: string, base: number, padChar?: string): string => {
   if (encoder?.length !== base || new TextEncoder().encode(encoder).length !== base) {
     throw new Error(`encoding alphabet is not ${base}-bytes.`);
   }

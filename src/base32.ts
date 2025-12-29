@@ -26,6 +26,12 @@ export interface Base32Options {
   encoder?: string;
 
   /**
+   * Disable padding character when encoding the data. Default false. This option is equivalent
+   * to setting `padChar` to empty string, and has higher priority than `padChar`.
+   */
+  noPadding?: boolean;
+
+  /**
    * Padding character for padding when the encoded string in bytes is not a number to a multiple
    * of 8, or set it to empty string to disable padding. The padding character must not be newline
    * character ('\r' and '\n'), and cannot be contained in the encoding alphabets. Default '='.
@@ -40,9 +46,15 @@ export class Base32Encoding {
   private encoder: string;
 
   /**
+   * Disable padding character when encoding the data. Default false. This option is equivalent
+   * to setting `padChar` to empty string, and has higher priority than `padChar`.
+   */
+  private noPadding?: boolean;
+
+  /**
    * The default padding character.
    */
-  private padChar: string;
+  private padChar?: string;
 
   /**
    * Creates a Base32 encoding instance with the optional encoder alphabets and padding character
@@ -57,16 +69,20 @@ export class Base32Encoding {
    * @param options Optional settings for Base32 encoding.
    */
   constructor(options?: Base32Options) {
-    let padChar: string | undefined;
-    if (options?.padChar !== undefined) {
-      padChar = checkPadChar(options.padChar);
+    this.noPadding = !!options?.noPadding;
+
+    if (!this.noPadding) {
+      let padChar: string | undefined;
+      if (options?.padChar !== undefined) {
+        padChar = checkPadChar(options.padChar);
+      }
+      this.padChar = padChar !== undefined ? padChar : '=';
     }
-    this.padChar = padChar !== undefined ? padChar : '=';
 
     this.encoder = checkEncoder(
       options?.encoder ? options.encoder : Base32StdEncoder,
-      this.padChar,
       ENCODER_LENGTH,
+      this.padChar,
     );
   }
 
@@ -206,7 +222,9 @@ export class Base32Encoding {
     let padChar;
     let encoder;
 
-    if (!options || options.padChar === undefined || checkPadChar(options.padChar) === undefined) {
+    if (this.noPadding || !!options?.noPadding) {
+      padChar = '';
+    } else if (!options || options.padChar === undefined || checkPadChar(options.padChar) === undefined) {
       padChar = this.padChar;
     } else {
       padChar = options.padChar;
@@ -218,11 +236,11 @@ export class Base32Encoding {
       encoder = options.encoder;
     }
 
-    encoder = checkEncoder(encoder, padChar, 32);
+    encoder = checkEncoder(encoder, ENCODER_LENGTH, padChar);
 
     return {
       encoder,
-      padChar,
+      padChar: padChar!,
     };
   }
 }

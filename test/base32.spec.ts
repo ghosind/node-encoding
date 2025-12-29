@@ -28,6 +28,20 @@ describe('Test base32 encode', () => {
 
   it('Test base32 encode with standard encoder and no padding character', () => {
     const encoder = new Base32Encoding({
+      noPadding: true,
+    });
+
+    assert.equal(encoder.encode(''), '');
+    assert.equal(encoder.encode('f'), 'MY');
+    assert.equal(encoder.encode('fo'), 'MZXQ');
+    assert.equal(encoder.encode('foo'), 'MZXW6');
+    assert.equal(encoder.encode('foob'), 'MZXW6YQ');
+    assert.equal(encoder.encode('fooba'), 'MZXW6YTB');
+    assert.equal(encoder.encode('foobar'), 'MZXW6YTBOI');
+  });
+
+  it('Test base32 encode with standard encoder and empty padding character', () => {
+    const encoder = new Base32Encoding({
       padChar: '',
     });
 
@@ -165,7 +179,16 @@ describe('Test base32 decode', () => {
     assert.equal(decoder.decode('CO======', options), 'f');
     assert.equal(decoder.decode('CPNG====', options), 'fo');
 
+    options.noPadding = true;
+    assert.equal(decoder.decode('CPNMU', options), 'foo');
+    assert.equal(decoder.decode('CPNMUOG', options), 'foob');
+
+    // set padding character but noPadding is true, so padChar is ignored.
     options.padChar = '+';
+    assert.equal(decoder.decode('CPNMU', options), 'foo');
+    assert.equal(decoder.decode('CPNMUOG', options), 'foob');
+
+    options.noPadding = false;
     assert.equal(decoder.decode('CPNMU+++', options), 'foo');
     assert.equal(decoder.decode('CPNMUOG+', options), 'foob');
 

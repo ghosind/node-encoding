@@ -6,14 +6,16 @@ import { checkEncoder, checkPadChar, decodeBytes } from '../src/utils';
 
 describe('Test check encoder', () => {
   it('Test check encoder', () => {
-    assert.doesNotThrow(() => checkEncoder(Base32StdEncoder, '=', 32));
+    assert.doesNotThrow(() => checkEncoder(Base32StdEncoder, 32));
+    assert.doesNotThrow(() => checkEncoder(Base32StdEncoder, 32, ''));
+    assert.doesNotThrow(() => checkEncoder(Base32StdEncoder, 32, '='));
     // @ts-ignore
-    assert.throws(() => checkEncoder(undefined, '=', 32));
-    assert.throws(() => checkEncoder(`${Base32StdEncoder},.`, '=', 32));
-    assert.throws(() => checkEncoder('å∫ç∂´ƒ©˙ˆ∆˚¬µ˜øπœ®ß†¨√∑≈¥234567', '=', 32));
-    assert.throws(() => checkEncoder(Base32StdEncoder, 'A', 32));
-    assert.throws(() => checkEncoder('ABCDEFGHIJKLMNOPQRSTUVWXYZ23456\n', '=', 32));
-    assert.throws(() => checkEncoder('ABCDEFGHIJKLMNOPQRSTUVWXYZ23456\r', '=', 32));
+    assert.throws(() => checkEncoder(undefined, 32, '='));
+    assert.throws(() => checkEncoder(`${Base32StdEncoder},.`, 32, '='));
+    assert.throws(() => checkEncoder('å∫ç∂´ƒ©˙ˆ∆˚¬µ˜øπœ®ß†¨√∑≈¥234567', 32, '='));
+    assert.throws(() => checkEncoder(Base32StdEncoder, 32, 'A'));
+    assert.throws(() => checkEncoder('ABCDEFGHIJKLMNOPQRSTUVWXYZ23456\n', 32, '='));
+    assert.throws(() => checkEncoder('ABCDEFGHIJKLMNOPQRSTUVWXYZ23456\r', 32, '='));
   });
 });
 
